@@ -66,7 +66,8 @@ const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
 
   strapi.db.lifecycles.subscribe({
     models: _modelsUID,
-    async afterDelete(event) {
+    async beforeDelete(event) {
+      console.log(JSON.stringify(event, null, 2));
       await createAuditLog(event, AuditAction.DELETE);
     },
   });

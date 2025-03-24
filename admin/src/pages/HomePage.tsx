@@ -13,11 +13,14 @@ import {
   EmptyStateLayout,
   Loader,
   Button,
+  Flex,
 } from "@strapi/design-system";
-import { Cross } from "@strapi/icons";
+import { Cross, Eye } from "@strapi/icons";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { AuditLogEntry, AuditAction } from "../types";
+import Modal from "../components/modal";
+import Pagination from "../components/Pagination";
 
 const getActionTextColor = (action: string): string => {
   switch (action) {
@@ -44,12 +47,31 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
+// Add interface for paginated response
+interface PaginatedResponse {
+  results: AuditLogEntry[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    pageCount: number;
+    total: number;
+  };
+}
+
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    pageCount: 1,
+    total: 0,
+  });
 
-  const fetchAudits = async () => {
+  const fetchAudits = async (page = 1) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -60,13 +82,16 @@ const HomePage = () => {
         token = token.substring(1, token.length - 1);
       }
 
-      const response = await axios.get<AuditLogEntry[]>("/audito/audits", {
+      const response = await axios.get<PaginatedResponse>("/audito/audits", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params: { page },
       });
 
-      setAuditLogs(response.data);
+      // Update state with the new response format
+      setAuditLogs(response.data.results);
+      setPagination(response.data.pagination);
     } catch (error) {
       console.error("Error fetching audits", error);
       setError("Failed to load audit logs. Please try again later.");
@@ -75,9 +100,24 @@ const HomePage = () => {
     }
   };
 
+  // When page changes, fetch new data
+  const handlePageChange = (pageNumber: number) => {
+    fetchAudits(pageNumber);
+  };
+
   useEffect(() => {
-    fetchAudits();
+    fetchAudits(1); // Start with page 1
   }, []);
+
+  const handleViewChanges = (id: number) => {
+    setSelectedLogId(id);
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedLogId(null);
+  };
 
   if (isLoading) {
     return (
@@ -130,7 +170,21 @@ const HomePage = () => {
           colCount={5}
           rowCount={auditLogs.length}
           footer={
-            <TFooter onClick={() => fetchAudits()}>Refresh audit logs</TFooter>
+            <TFooter>
+              <Flex
+                justifyContent="space-between"
+                alignItems="center"
+                padding={3}
+              >
+                {pagination.pageCount > 1 && (
+                  <Pagination
+                    currentPage={pagination.page}
+                    pageCount={pagination.pageCount}
+                    onPageChange={handlePageChange}
+                  />
+                )}
+              </Flex>
+            </TFooter>
           }
         >
           <Thead>
@@ -174,12 +228,26 @@ const HomePage = () => {
                   </Typography>
                 </Td>
                 <Td>
-                  <p>temp</p>
+                  <Button
+                    onClick={() => handleViewChanges(log.id)}
+                    variant="tertiary"
+                    startIcon={<Eye />}
+                    size="S"
+                  >
+                    View
+                  </Button>
                 </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
+
+        {/* Modal component */}
+        <Modal
+          id={selectedLogId}
+          visible={isModalVisible}
+          onClose={handleCloseModal}
+        />
       </Box>
     </Main>
   );

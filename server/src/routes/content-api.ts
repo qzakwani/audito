@@ -7,4 +7,12 @@ export default [
       policies: ["admin::isAuthenticatedAdmin"],
     },
   },
+  {
+    method: "GET",
+    path: "/audits/:id",
+    handler: "controller.getChanges",
+    config: {
+      policies: ["admin::isAuthenticatedAdmin"],
+    },
+  },
 ];

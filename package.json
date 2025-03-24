@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -63,8 +63,18 @@
     "displayName": "Audito",
     "description": "Audit logs for content types (create, update, delete)"
   },
-  "name": "audito",
+  "name": "audito-strapi",
   "description": "Audit logs for content types (create, update, delete)",
   "license": "MIT",
-  "author": "Alqasim Alzakwani <q.zak003@gmail.com>"
+  "author": "Alqasim Alzakwani",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qzakwani/audito"
+  },
+  
+  "homepage": "https://github.com/qzakwani/audito#readme",
+  
+  "bugs": {
+    "url": "https://github.com/qzakwani/audito/issues"
+  }
 }
